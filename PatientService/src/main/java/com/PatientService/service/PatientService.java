@@ -1,12 +1,15 @@
 package com.PatientService.service;
 
+import com.PatientService.client.DoctorFeignClient;
 import com.PatientService.dto.AppointmentRequestDTO;
 import com.PatientService.entity.Appointment;
 import com.PatientService.dto.AppointmentDTO;
 import com.PatientService.repo.AppointmentRepository;
 import com.PatientService.repo.PatientRepository;
+import com.healthcare.dto.DoctorDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -20,6 +23,11 @@ public class PatientService {
     @Autowired
     private PatientRepository patientRepository;
 
+
+    @Autowired
+    private DoctorFeignClient doctorFeignClient;
+
+
     public List<AppointmentDTO> getAllAppointments() {
         List<Appointment> appointments = appointmentRepository.findAll();
         // Convert each Appointment entity to AppointmentDTO
@@ -32,6 +40,7 @@ public class PatientService {
                         appointment.isCanceled()))
                 .collect(Collectors.toList());
     }
+
     public Appointment bookAppointment(AppointmentRequestDTO appointmentRequestDTO) {
         // Convert AppointmentRequestDTO to Appointment entity
         Appointment appointment = new Appointment();
@@ -47,5 +56,16 @@ public class PatientService {
 
     public void cancelAppointment(String appointmentId) {
         appointmentRepository.deleteById(appointmentId);
+    }
+
+
+    // Get available doctors and their slots from the Doctor Scheduling Service
+    public List<DoctorDTO> getAvailableDoctors() {
+        return doctorFeignClient.getAvailableDoctors();
+    }
+
+    // Book an appointment with a doctor
+    public String bookAppointment(String doctorId, AppointmentRequestDTO appointmentRequest) {
+        return doctorFeignClient.bookAppointment(doctorId, appointmentRequest);
     }
 }
